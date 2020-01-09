@@ -11,6 +11,8 @@ import { getKeycloak, refresh, login } from './utils/keycloak.js'
 import isRedirecting from './actions/isRedirecting.js'
 import updateFilingPeriod from './actions/updateFilingPeriod.js'
 import { detect } from 'detect-browser'
+import { splitYearQuarter } from './api/utils.js'
+import { currentQuarterlyPeriod } from './constants/dates'
 
 import 'normalize.css'
 import './app.css'
@@ -70,8 +72,15 @@ export class AppContainer extends Component {
     return !!props.location.pathname.match(/^\/filing\/\d{4}\/$/)
   }
 
+  isValidPeriod(period) {
+    const [year] = splitYearQuarter(period)
+    const filingPeriods = this.props.config.filingPeriods
+
+    return filingPeriods.indexOf(year) !== -1 || period === currentQuarterlyPeriod()
+  }
+
   render() {
-    const { match: { params }, location, config: { filingPeriods } } = this.props
+    const { match: { params }, location } = this.props
 
     return (
       <div className="AppContainer">
@@ -81,7 +90,7 @@ export class AppContainer extends Component {
         <Header filingPeriod={params.filingPeriod} pathname={location.pathname} />
         <ConfirmationModal />
         {isBeta() ? <Beta/> : null}
-        {filingPeriods.indexOf(params.filingPeriod.split('-')[0]) !== -1
+        {this.isValidPeriod(params.filingPeriod)
           ? this._renderAppContents(this.props)
           : params.filingPeriod === '2017'
             ? <p className="full-width">Files are no longer being accepted for the 2017 filing period. For further assistance, please contact <a href="mailto:hmdahelp@cfpb.gov">HMDA Help</a>.</p>
