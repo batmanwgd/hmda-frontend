@@ -118,7 +118,7 @@ const _whatToRender = ({ filings, institutions, submission, filingPeriod, latest
 
 export default class Institutions extends Component {
   render() {
-    const { error, filingPeriod, filingPeriods, history, location, selectionPeriods, dispatch } = this.props
+    const { error, filingPeriod, filingPeriods, history, location, dispatch } = this.props
 
     return (
       <main id="main-content" className="Institutions full-width">
@@ -133,7 +133,6 @@ export default class Institutions extends Component {
             filingPeriod={filingPeriod}
             history={history}
             pathname={location.pathname}
-            selectionPeriods={selectionPeriods}
             dispatch={dispatch}
           />
 
