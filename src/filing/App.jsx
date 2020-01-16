@@ -82,6 +82,7 @@ export class AppContainer extends Component {
         this.props.history.replace(
           this.props.location.pathname.replace(period, fp)
         )
+        return
       }
     }
   }
