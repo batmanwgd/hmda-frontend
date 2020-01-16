@@ -11,8 +11,6 @@ import { getKeycloak, refresh, login } from './utils/keycloak.js'
 import isRedirecting from './actions/isRedirecting.js'
 import updateFilingPeriod from './actions/updateFilingPeriod.js'
 import { detect } from 'detect-browser'
-import { splitYearQuarter } from './api/utils.js'
-import { isValidQPeriod, yearHasQuarterly } from './utils/dateQuarterly.js'
 
 import 'normalize.css'
 import './app.css'
@@ -21,7 +19,13 @@ const browser = detect()
 
 export class AppContainer extends Component {
   componentDidMount() {
-    this.props.dispatch(updateFilingPeriod(this.props.match.params.filingPeriod))
+    const filingPeriod = this.props.match.params.filingPeriod
+    if(this.isValidPeriod(filingPeriod)){
+      this.props.dispatch(updateFilingPeriod(filingPeriod))
+    }else{
+      this.checkForValidQuarters(filingPeriod)
+    }
+
     const keycloak = getKeycloak()
     keycloak.init().then(authenticated => {
       this.keycloakConfigured = true
@@ -38,15 +42,12 @@ export class AppContainer extends Component {
   }
 
   componentDidUpdate(prevProps) {
+    const filingPeriod = this.props.match.params.filingPeriod
+    if(!this.isValidPeriod(filingPeriod)) this.checkForValidQuarters(filingPeriod)
+
     const keycloak = getKeycloak()
     if (!keycloak.authenticated && !this._isHome(this.props)){
       if(this.keycloakConfigured) login(this.props.location.pathname)
-    }
-
-
-    const period = this.props.match.params.filingPeriod
-    if(prevProps.match.params.filingPeriod !== period) {
-      this.props.dispatch(updateFilingPeriod(period))
     }
 
     if (this.props.location.pathname !== prevProps.location.pathname){
@@ -72,16 +73,26 @@ export class AppContainer extends Component {
     return !!props.location.pathname.match(/^\/filing\/\d{4}\/$/)
   }
 
+  checkForValidQuarters(period){
+    const quarters = ['-Q3', '-Q2', '-Q1']
+    for(let i=0; i< quarters.length; i++){
+      const fp = period + quarters[i]
+      if(this.isValidPeriod(fp)){
+        this.props.dispatch(updateFilingPeriod(fp))
+        this.props.history.replace(
+          this.props.location.pathname.replace(period, fp)
+        )
+      }
+    }
+  }
+
   isValidPeriod(period) {
-    const filingPeriods = this.props.config.filingPeriods
-    const [year, quarter] = splitYearQuarter(period)
-    
-    if(quarter) return isValidQPeriod(period, filingPeriods) 
-    return filingPeriods.indexOf(year) !== -1 || yearHasQuarterly(year)
+    return this.props.config.filingPeriods.indexOf(period) > -1
   }
 
   render() {
     const { match: { params }, location } = this.props
+    const validFilingPeriod = this.isValidPeriod(params.filingPeriod)
 
     return (
       <div className="AppContainer">
@@ -91,7 +102,7 @@ export class AppContainer extends Component {
         <Header filingPeriod={params.filingPeriod} pathname={location.pathname} />
         <ConfirmationModal />
         {isBeta() ? <Beta/> : null}
-        {this.isValidPeriod(params.filingPeriod)
+        {validFilingPeriod
           ? this._renderAppContents(this.props)
           : params.filingPeriod === '2017'
             ? <p className="full-width">Files are no longer being accepted for the 2017 filing period. For further assistance, please contact <a href="mailto:hmdahelp@cfpb.gov">HMDA Help</a>.</p>
