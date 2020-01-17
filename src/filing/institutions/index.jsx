@@ -32,7 +32,7 @@ const wrapLoading = (i = 0) => {
   )
 }
 
-const _whatToRender = ({ filings, institutions, submission, filingPeriod, latestSubmissions }) => {
+const _whatToRender = ({ filings, institutions, submission, filingPeriod, filingQuarters, latestSubmissions }) => {
 
   // we don't have institutions yet
   if (!institutions.fetched) return wrapLoading()
@@ -99,6 +99,7 @@ const _whatToRender = ({ filings, institutions, submission, filingPeriod, latest
           institution={institution}
           submission={_setSubmission(submission, institutionSubmission, filingObj)}
           submissions={filingObj.submissions}
+          filingQuarters={filingQuarters}
         />
       )
     }
@@ -139,14 +140,14 @@ const _whatToRender = ({ filings, institutions, submission, filingPeriod, latest
 
 export default class Institutions extends Component {
   render() {
-    const { error, filingPeriod, filingPeriods, history, location, dispatch } = this.props
+    const { error, filingPeriod, filingPeriods, filingQuarters, history, location, dispatch } = this.props
 
     return (
       <main id="main-content" className="Institutions full-width">
         {error ? <ErrorWarning error={error} /> : null}
         <div className="usa-width-one-whole">
           {filingPeriod ? (
-            <InstitutionsHeader filingPeriod={filingPeriod} />
+            <InstitutionsHeader filingPeriod={filingPeriod} filingQuarters={filingQuarters} />
           ) : null}
 
           <InstitutionPeriodSelector

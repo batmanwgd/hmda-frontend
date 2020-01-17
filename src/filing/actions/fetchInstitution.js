@@ -8,7 +8,7 @@ import { error } from '../utils/log.js'
 import receiveNonQFiling from './receiveNonQFiling'
 import { splitYearQuarter } from '../api/utils'
 
-export default function fetchInstitution(institution, filingPeriod, fetchFilings = true) {
+export default function fetchInstitution(institution, filingPeriod, filingQuarters, fetchFilings = true) {
   return dispatch => {
     dispatch(requestInstitution(institution.lei))
     return getInstitution(institution.lei, filingPeriod)
@@ -25,7 +25,7 @@ export default function fetchInstitution(institution, filingPeriod, fetchFilings
             const isQuarterly = splitYearQuarter(filingPeriod)[1]
             return isQuarterly && !json.institution.quarterlyFiler
               ? dispatch(receiveNonQFiling(json))
-              : dispatch(fetchCurrentFiling(json))
+              : dispatch(fetchCurrentFiling(json, filingQuarters))
           }
         })
       })
